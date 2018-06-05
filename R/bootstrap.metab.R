@@ -19,7 +19,7 @@ bootstrap.metab <- function(guesses, pars, fn, do.obs, do.sat, k.gas, z.mix, irr
   }
 
   #Pre-allocate the result data frame
-  result <- data.frame(boot.iter = 1:n.boot,gppCoeff = rep(NA,n.boot),rCoeff = rep(NA,n.boot),doInit = rep(NA,n.boot),nll = rep(NA,n.boot),
+  result <- data.frame(boot.iter = 1:n.boot,gppCoeff = rep(NA,n.boot),rCoeff = rep(NA,n.boot),doInit = rep(NA,n.boot),
                        GPP=rep(NA,n.boot),R=rep(NA,n.boot),NEP=rep(NA,n.boot))
 
   for(i in 1:n.boot){
@@ -39,35 +39,26 @@ bootstrap.metab <- function(guesses, pars, fn, do.obs, do.sat, k.gas, z.mix, irr
 
     #Run metab model again with new simulated DO signal
     if(error.type=='OE'){
-      boot.temp <- optim(guesses, fn=mleNllOE, do.obs=do.sim, do.sat=do.sat, k.gas=k.gas, z.mix=z.mix, irr=irr, wtr=wtr,logged=logged)
+      boot.temp <- optim(guesses, fn=mleNllOE, do.obs=do.sim, do.sat=do.sat, k.gas=k.gas, z.mix=z.mix, irr=irr, wtr=wtr)
       pars0 <- boot.temp$par
 
-      if(logged){
-        pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=boot.temp$value, "doInit"=exp(pars0[4]))
-      }else{
-        pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "nll"=boot.temp$value, "doInit"=pars0[4])
-      }
+      pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "doInit"=pars0[4])
 
       GPP <- mean(pars[1]*irr, na.rm=TRUE) * freq
       R <- mean(pars[2]*log(wtr), na.rm=TRUE) * freq
       NEP<-GPP+R
       # store result of current iteration in output data frame
       result[i,2:3]<-pars[1:2]
-      result[i,4]<-pars[5]
-      result[i,5]<-pars[4]
-      result[i,6]<-GPP
-      result[i,7]<-R
-      result[i,8]<-NEP
+      result[i,4]<-pars[4]
+      result[i,5]<-GPP
+      result[i,6]<-R
+      result[i,7]<-NEP
 
     }else if(error.type=='PE'){
-      boot.temp <- optim(guesses, fn=mleNllPE, do.obs=do.sim, do.sat=do.sat, k.gas=k.gas, z.mix=z.mix, irr=irr, wtr=wtr,logged=logged)
+      boot.temp <- optim(guesses, fn=mleNllPE, do.obs=do.sim, do.sat=do.sat, k.gas=k.gas, z.mix=z.mix, irr=irr, wtr=wtr)
       pars0 <- boot.temp$par
 
-      if(logged){
-        pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=boot.temp$value)
-      }else{
-        pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "nll"=boot.temp$value)
-      }
+      pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]))
 
       GPP <- mean(pars[1]*irr, na.rm=TRUE) * freq
       R <- mean(pars[2]*log(wtr), na.rm=TRUE) * freq
@@ -75,10 +66,9 @@ bootstrap.metab <- function(guesses, pars, fn, do.obs, do.sat, k.gas, z.mix, irr
       # store result of current iteration in output data frame
       result[i,2:3]<-pars[1:2]
       result[i,4]<-do.sim[1]
-      result[i,5]<-pars[4]
-      result[i,6]<-GPP
-      result[i,7]<-R
-      result[i,8]<-NEP
+      result[i,5]<-GPP
+      result[i,6]<-R
+      result[i,7]<-NEP
     }
   }
   return(result)
